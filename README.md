@@ -28,6 +28,9 @@ IthaGram is free software under the GNU GPL v3 or later, with the additional ter
 [exteraGram](https://github.com/exteraSquad/exteraGram) and [Telegram](https://github.com/DrKLO/Telegram) authors.
 The launcher icons from the exteraGram contest keep the credit of their authors.
 
+IthaGram is developed by [Gabi](https://github.com/gabrielacjs), with the help of [Claude](https://claude.ai) (Anthropic),
+which co-authored much of the code.
+
 ---
 
 # exteraGram (original README)
