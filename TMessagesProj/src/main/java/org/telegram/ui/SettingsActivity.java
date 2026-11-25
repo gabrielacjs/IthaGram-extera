@@ -600,7 +600,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
         titleView.setText(Emoji.replaceEmoji(UserObject.getUserName(user), titleView.getPaint().getFontMetricsInt(), false));
         final StringBuilder sb = new StringBuilder();
         if (user != null && !ExteraConfig.getHidePhoneNumber()) {
-            sb.append(org.telegram.messenger.IthaConfig.maskPhone(PhoneFormat.getInstance().format("+" + user.phone)));
+            sb.append(PhoneFormat.getInstance().format("+" + user.phone));
         }
         final String username = UserObject.getPublicUsername(user);
         if (username != null) {
@@ -609,8 +609,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
             }
             sb.append("@").append(username);
         }
-        subtitleView.setText(org.telegram.messenger.IthaConfig.fixHeader(sb));
-        org.telegram.messenger.IthaConfig.settingsRef = new java.lang.ref.WeakReference<>(this);
+        subtitleView.setText(sb);
 
         versionView.setText(AppUtils.getVersionText());
     }

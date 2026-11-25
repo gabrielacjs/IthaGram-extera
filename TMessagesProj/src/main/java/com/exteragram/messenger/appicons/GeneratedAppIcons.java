@@ -24,7 +24,12 @@ public final class GeneratedAppIcons {
 
     public static AppIcon[] create() {
         return new AppIcon[]{
-            AppIcon.of("default", "com.exteragram.messenger.DefaultIcon", "always", R.string.AppIconDefault, null, R.string.AppIconDefaultInfo, null, 0, "exteraGram", null, R.color.ic_background, true, R.mipmap.ic_launcher_foreground, R.drawable.ic_monochrome),
+            AppIcon.of("default", "com.exteragram.messenger.DefaultIcon", "always", R.string.AppIconDefault, null, R.string.AppIconDefaultInfo, null, 0, null, "IthaGram", R.color.ic_background, true, R.mipmap.ic_launcher_foreground, R.drawable.ic_monochrome),
+            AppIcon.of("itha_aurora", "com.exteragram.messenger.IthaAuroraIcon", "always", 0, "Itha Aurora", 0, null, 0, null, "IthaGram", R.drawable.ic_ithagram_bg_aurora, false, R.drawable.ic_ithagram_fg_aurora, R.drawable.ic_ithagram_monochrome),
+            AppIcon.of("itha_coral", "com.exteragram.messenger.IthaCoralIcon", "always", 0, "Itha Coral", 0, null, 0, null, "IthaGram", R.drawable.ic_ithagram_bg_coral, false, R.drawable.ic_ithagram_fg_coral, R.drawable.ic_ithagram_monochrome),
+            AppIcon.of("itha_dorado", "com.exteragram.messenger.IthaDoradoIcon", "always", 0, "Itha Dorado", 0, null, 0, null, "IthaGram", R.drawable.ic_ithagram_bg_dorado, false, R.drawable.ic_ithagram_fg_dorado, R.drawable.ic_ithagram_monochrome),
+            AppIcon.of("itha_hielo", "com.exteragram.messenger.IthaHieloIcon", "always", 0, "Itha Hielo", 0, null, 0, null, "IthaGram", R.drawable.ic_ithagram_bg_hielo, false, R.drawable.ic_ithagram_fg_hielo, R.drawable.ic_ithagram_monochrome),
+            AppIcon.of("itha_menta", "com.exteragram.messenger.IthaMentaIcon", "always", 0, "Itha Menta", 0, null, 0, null, "IthaGram", R.drawable.ic_ithagram_bg_menta, false, R.drawable.ic_ithagram_fg_menta, R.drawable.ic_ithagram_monochrome),
             AppIcon.of("winter", "com.exteragram.messenger.WinterIcon", "winter", R.string.AppIconWinter, null, R.string.AppIconWinterInfo, null, 0, "exteraGram", null, R.mipmap.ic_launcher_winter_background, false, R.mipmap.ic_launcher_foreground, R.drawable.ic_monochrome),
             AppIcon.of("monet", "com.exteragram.messenger.MonetIcon", "monet", R.string.AppIconMonet, null, R.string.AppIconMonetInfo, null, 0, "exteraGram", null, R.color.ic_background_monet, true, R.drawable.ic_foreground_monet, 0),
             AppIcon.of("orbit", "com.exteragram.messenger.OrbitIcon", "always", R.string.AppIconOrbit, null, R.string.AppIconOrbitInfo, null, 0, "exteraGram", null, R.color.ic_background, true, R.mipmap.ic_launcher_orbit_foreground, R.drawable.ic_monochrome_orbit),

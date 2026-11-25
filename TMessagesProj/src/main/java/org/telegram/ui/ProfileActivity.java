@@ -12415,6 +12415,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     }
                 }
 
+                if (rightDrawable2 == null) {
+                    rightDrawable2 = org.telegram.messenger.IthaBadges.getDrawable(user.id, 22, () -> updateProfileData(false));
+                }
                 nameTextView.setRightDrawable(rightDrawable1);
                 nameTextView.setRightDrawable2(rightDrawable2);
 

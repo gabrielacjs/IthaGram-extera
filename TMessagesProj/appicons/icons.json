@@ -7,15 +7,60 @@
       "component": "DefaultIcon",
       "titleRes": "AppIconDefault",
       "descriptionRes": "AppIconDefaultInfo",
-      "background": "@color/ic_background",
+      "background": "@drawable/ic_ithagram_background",
       "round": true,
-      "author": "exteraGram"
+      "authorName": "IthaGram"
     },
     {
       "id": "beta",
       "resource": "ic_launcher_beta",
       "monochrome": "@drawable/ic_monochrome_beta",
       "assetsOnly": true
+    },
+    {
+      "id": "itha_aurora",
+      "title": "Itha Aurora",
+      "authorName": "IthaGram",
+      "background": "@drawable/ic_ithagram_bg_aurora",
+      "foreground": "@drawable/ic_ithagram_fg_aurora",
+      "monochrome": "@drawable/ic_ithagram_monochrome",
+      "legacy": false
+    },
+    {
+      "id": "itha_coral",
+      "title": "Itha Coral",
+      "authorName": "IthaGram",
+      "background": "@drawable/ic_ithagram_bg_coral",
+      "foreground": "@drawable/ic_ithagram_fg_coral",
+      "monochrome": "@drawable/ic_ithagram_monochrome",
+      "legacy": false
+    },
+    {
+      "id": "itha_dorado",
+      "title": "Itha Dorado",
+      "authorName": "IthaGram",
+      "background": "@drawable/ic_ithagram_bg_dorado",
+      "foreground": "@drawable/ic_ithagram_fg_dorado",
+      "monochrome": "@drawable/ic_ithagram_monochrome",
+      "legacy": false
+    },
+    {
+      "id": "itha_hielo",
+      "title": "Itha Hielo",
+      "authorName": "IthaGram",
+      "background": "@drawable/ic_ithagram_bg_hielo",
+      "foreground": "@drawable/ic_ithagram_fg_hielo",
+      "monochrome": "@drawable/ic_ithagram_monochrome",
+      "legacy": false
+    },
+    {
+      "id": "itha_menta",
+      "title": "Itha Menta",
+      "authorName": "IthaGram",
+      "background": "@drawable/ic_ithagram_bg_menta",
+      "foreground": "@drawable/ic_ithagram_fg_menta",
+      "monochrome": "@drawable/ic_ithagram_monochrome",
+      "legacy": false
     },
     {
       "id": "winter",
@@ -40,7 +85,7 @@
       "id": "orbit",
       "titleRes": "AppIconOrbit",
       "descriptionRes": "AppIconOrbitInfo",
-      "background": "@color/ic_background",
+      "background": "@drawable/ic_ithagram_background",
       "monochrome": "@drawable/ic_monochrome_orbit",
       "author": "exteraGram"
     },

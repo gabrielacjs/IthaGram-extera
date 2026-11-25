@@ -12,25 +12,6 @@ public class IthaConfig {
         return ApplicationLoader.applicationContext.getSharedPreferences("itha_config", Context.MODE_PRIVATE);
     }
 
-    // ---- numero de telefono en Ajustes ----
-
-    /** Ocultar el numero de telefono de la cabecera de Ajustes. */
-    public static boolean isPhoneHidden() {
-        return prefs().getBoolean("phone_hidden", false);
-    }
-
-    public static void setPhoneHidden(boolean value) {
-        prefs().edit().putBoolean("phone_hidden", value).apply();
-    }
-
-    /** Devuelve el numero, o nada si la opcion de ocultarlo esta activa. */
-    public static String maskPhone(String phone) {
-        if (phone == null || !isPhoneHidden()) {
-            return phone;
-        }
-        return "";
-    }
-
     // ---- encabezado del chat ----
 
     /** Ocultar el avatar del encabezado dentro de los chats (se aplica al abrir un chat). */
@@ -171,16 +152,5 @@ public class IthaConfig {
 
     public static void setChatPillCompact(boolean value) {
         prefs().edit().putBoolean("chat_pill_compact", value).apply();
-    }
-
-    /** La pantalla de Ajustes que esta abierta (para refrescar su cabecera al instante). */
-    public static java.lang.ref.WeakReference<org.telegram.ui.SettingsActivity> settingsRef;
-
-    /** Si el numero esta oculto, saca el separador que quedaria sobrando al principio ("@usuario" solo). */
-    public static CharSequence fixHeader(StringBuilder sb) {
-        if (isPhoneHidden() && sb.indexOf(" \u2022 ") == 0) {
-            return sb.substring(3);
-        }
-        return sb;
     }
 }

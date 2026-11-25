@@ -230,7 +230,7 @@ fun setProxyDisabledOn(condition: ProxyDisableCondition, disable: Boolean) {
     doNotUseProxy = if (disable) doNotUseProxy or condition.flag else doNotUseProxy and condition.flag.inv()
 }
 
-var customSavePath by StringPref("exteraGram")
+var customSavePath by StringPref("IthaGram")
 
 var doNotMarkAsNew = ArrayList<String>()
 var newFeaturesShowedAt = HashMap<String, Long>()

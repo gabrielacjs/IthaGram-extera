@@ -373,7 +373,9 @@ public class ProfileGiftsView extends View implements NotificationCenter.Notific
 
     @Override
     protected void dispatchDraw(@NonNull Canvas canvas) {
-        if (gifts.isEmpty() || expandProgress >= 1.0f || collapseProgress <= 0f) return;
+        final java.util.List<String> ithaKinds = dialogId > 0 ? org.telegram.messenger.IthaBadges.kindsFor(dialogId, () -> invalidate()) : null;
+        final boolean hasIthaBadges = ithaKinds != null && !ithaKinds.isEmpty();
+        if ((gifts.isEmpty() && !hasIthaBadges) || expandProgress >= 1.0f || collapseProgress <= 0f) return;
 
         final float realX = avatarContainer.getX();
         final float realY = avatarContainer.getY();
@@ -464,6 +466,261 @@ public class ProfileGiftsView extends View implements NotificationCenter.Notific
             gift.draw(canvas, gx, gy, scale, 0, alpha, 1f);
         }
 
+        if (hasIthaBadges) {
+            // las insignias giran alrededor del avatar: por arriba (espacio libre) y por abajo, nunca detras de la foto
+            final int count = Math.min(4, ithaKinds.size());
+            final float tSec = (android.os.SystemClock.uptimeMillis() % 1000000L) / 1000f;
+            ithaRx = aw / 2f + dp(46);
+            ithaRyUp = ah / 2f + dp(16);
+            ithaRyDown = ah / 2f + dp(10);
+            ithaAcx = acx;
+            ithaAcy = acy;
+
+            // ritmo: rebote seguido (120 pulsos por minuto) cuando suena musica, suave cuando no
+            final long nowMs = android.os.SystemClock.uptimeMillis();
+            final float dt = ithaLastMs == 0 ? 0f : Math.min(0.05f, (nowMs - ithaLastMs) / 1000f);
+            ithaLastMs = nowMs;
+            boolean music = false;
+            try {
+                final org.telegram.messenger.MediaController mc = org.telegram.messenger.MediaController.getInstance();
+                music = mc.getPlayingMessageObject() != null && !mc.isMessagePaused();
+            } catch (Throwable ignore) {
+            }
+            ithaBeatAmt += ((music ? 1f : 0.3f) - ithaBeatAmt) * Math.min(1f, dt * 4f);
+            ithaBeatPhase += dt / (music ? 0.5f : 1.6f);
+            ithaBeatPhase -= (float) Math.floor(ithaBeatPhase);
+
+            for (int i = 0; i < count; ++i) {
+                final String kind = ithaKinds.get(i);
+                final float enter = ithaEnter(kind).set(1.0f);
+                final float theta = (float) (tSec * (2 * Math.PI / 10.0) + i * 2 * Math.PI / count + 0.6);
+                final float depth = (float) Math.sin(theta); // 1 = abajo/adelante, -1 = arriba/atras
+
+                // rebote: sale disparada hacia afuera, pasa de largo y vuelve (resorte)
+                final float bb = (ithaBeatPhase + i * 0.03f) % 1f;
+                final float kick = (float) (Math.exp(-7f * bb) * Math.cos(18f * bb)) * ithaBeatAmt;
+
+                final float push = 1f + 0.07f * kick;
+                float gx = ithaAcx + (float) Math.cos(theta) * ithaRx * push;
+                float gy = ithaOrbitY(theta) + (ithaOrbitY(theta) - ithaAcy) * 0.07f * kick - dp(5) * kick;
+                float scale = lerp(0.5f, 1.0f, enter) * (1f + 0.16f * depth) * (1f + 0.20f * kick);
+                final float alpha = enter * (1.0f - expandProgress) * (1.0f - actionBarProgress) * closedAlpha * (0.8f + 0.1f * (depth + 1f));
+
+                final float collapseWithEnter = (isOpening || enter >= 1f) ? collapseProgress : Math.min(enter, collapseProgress);
+                final float delayFraction = 0.2f;
+                final float maxDelayFraction = 1.6f * delayFraction;
+                final float intervalFraction = 1f - maxDelayFraction;
+                final float delay = 0.5f * i * delayFraction;
+                final float collapse = collapseWithEnter >= 1f - delay ? 1f
+                        : Utilities.clamp01((collapseWithEnter - maxDelayFraction + delay) / intervalFraction);
+                if (collapse < 1f) {
+                    gx = AndroidUtilities.lerp(realCX, gx, giftCollapseXInterpolator.getInterpolation(collapse));
+                    gy = AndroidUtilities.lerp(realCY, gy, giftCollapseYInterpolator.getInterpolation(collapse));
+                    scale = AndroidUtilities.lerp(scale / 2f, scale, collapse);
+                }
+
+                // efecto gelatina: se estira y se aplasta mientras gira
+                final float wobble = 0.06f * (float) Math.sin(tSec * 3.1f + i * 1.7f);
+                if (collapse >= 1f && enter >= 1f) {
+                    // estela de cometa detras de la burbuja
+                    for (int k = 3; k >= 1; --k) {
+                        final float th = theta - k * 0.17f;
+                        final float dd = (float) Math.sin(th);
+                        drawIthaTrail(canvas, kind, ithaAcx + (float) Math.cos(th) * ithaRx, ithaOrbitY(th), 1f + 0.16f * dd, alpha * 0.07f * (4 - k));
+                    }
+                }
+                drawIthaBadge(canvas, kind, gx, gy, scale * (1f + wobble), scale * (1f - wobble), alpha, tSec, i * 1.7f, kick);
+            }
+            if (count > 0) {
+                postInvalidateOnAnimation();
+            }
+        }
+
+        canvas.restore();
+    }
+
+    private final java.util.HashMap<String, AnimatedFloat> ithaEnter = new java.util.HashMap<>();
+    private final java.util.HashMap<String, android.graphics.drawable.Drawable> ithaDrawables = new java.util.HashMap<>();
+    private final Paint ithaPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+
+    private AnimatedFloat ithaEnter(String kind) {
+        AnimatedFloat f = ithaEnter.get(kind);
+        if (f == null) {
+            f = new AnimatedFloat(this, 0, 320, null);
+            f.force(0.0f);
+            ithaEnter.put(kind, f);
+        }
+        return f;
+    }
+
+    private float ithaRx, ithaRyUp, ithaRyDown, ithaAcx, ithaAcy;
+    private long ithaLastMs;
+    private float ithaBeatAmt = 0.3f, ithaBeatPhase;
+
+    /** Y de la orbita: la mitad de arriba es mas alta (usa el espacio libre sobre la foto). */
+    private float ithaOrbitY(float theta) {
+        final float s = (float) Math.sin(theta);
+        return ithaAcy + (s < 0 ? s * ithaRyUp : s * ithaRyDown);
+    }
+
+    private static class IthaFx {
+        Shader glow, body, ring, shine;
+    }
+
+    private final java.util.HashMap<String, IthaFx> ithaFxMap = new java.util.HashMap<>();
+    private final android.graphics.Path ithaStar = new android.graphics.Path();
+    private final android.graphics.Path ithaClip = new android.graphics.Path();
+    private final RectF ithaRect = new RectF();
+
+    private IthaFx ithaFx(String kind, int color) {
+        IthaFx fx = ithaFxMap.get(kind);
+        if (fx != null) return fx;
+        fx = new IthaFx();
+        final float r = dpf2(23);
+        fx.glow = new RadialGradient(0, 0, dp(40), new int[]{Theme.multAlpha(color, 0.60f), Theme.multAlpha(color, 0.0f)}, new float[]{0, 1}, Shader.TileMode.CLAMP);
+        // cuerpo tipo esfera de cristal: luz arriba a la izquierda, borde mas oscuro y saturado
+        fx.body = new RadialGradient(-0.30f * r, -0.35f * r, 1.35f * r, new int[]{
+                Theme.multAlpha(androidx.core.graphics.ColorUtils.blendARGB(color, 0xFFFFFFFF, 0.55f), 0.60f),
+                Theme.multAlpha(color, 0.34f),
+                Theme.multAlpha(androidx.core.graphics.ColorUtils.blendARGB(color, 0xFF000000, 0.20f), 0.42f)
+        }, new float[]{0f, 0.5f, 1f}, Shader.TileMode.CLAMP);
+        // aro de neon con un brillo que gira
+        final int a = Theme.multAlpha(color, 0.55f);
+        fx.ring = new android.graphics.SweepGradient(0, 0, new int[]{a, 0xFFFFFFFF, a, a}, new float[]{0f, 0.08f, 0.35f, 1f});
+        // banda de destello
+        fx.shine = new android.graphics.LinearGradient(-dpf2(8), 0, dpf2(8), 0, new int[]{0x00FFFFFF, 0x99FFFFFF, 0x00FFFFFF}, new float[]{0f, 0.5f, 1f}, Shader.TileMode.CLAMP);
+        ithaFxMap.put(kind, fx);
+        return fx;
+    }
+
+    private void buildIthaStar() {
+        for (int k = 0; k < 8; k++) {
+            final double ang = k * Math.PI / 4;
+            final float rad = (k % 2 == 0) ? 1f : 0.28f;
+            final float x = (float) Math.cos(ang) * rad;
+            final float y = (float) Math.sin(ang) * rad;
+            if (k == 0) ithaStar.moveTo(x, y); else ithaStar.lineTo(x, y);
+        }
+        ithaStar.close();
+    }
+
+    private void drawIthaTrail(Canvas canvas, String kind, float cx, float cy, float scale, float alpha) {
+        if (alpha <= 0.0f) return;
+        final int color = org.telegram.messenger.IthaBadgeDrawable.colorFor(kind);
+        if (color == 0) return;
+        final IthaFx fx = ithaFx(kind, color);
+        canvas.save();
+        canvas.translate(cx, cy);
+        canvas.scale(scale * 0.75f, scale * 0.75f);
+        ithaPaint.setStyle(Paint.Style.FILL);
+        ithaPaint.setShader(fx.glow);
+        ithaPaint.setAlpha((int) (0xFF * Math.min(1f, alpha)));
+        canvas.drawCircle(0, 0, dp(40), ithaPaint);
+        ithaPaint.setShader(null);
+        canvas.restore();
+    }
+
+    private void drawIthaBadge(Canvas canvas, String kind, float cx, float cy, float scaleX, float scaleY, float alpha, float tSec, float phase, float beat) {
+        if (alpha <= 0.0f) return;
+        final int color = org.telegram.messenger.IthaBadgeDrawable.colorFor(kind);
+        if (color == 0) return;
+        if (ithaStar.isEmpty()) buildIthaStar();
+        final IthaFx fx = ithaFx(kind, color);
+        android.graphics.drawable.Drawable d = ithaDrawables.get(kind);
+        if (d == null) {
+            d = new org.telegram.messenger.IthaBadgeDrawable(kind, 30);
+            ithaDrawables.put(kind, d);
+        }
+        final float r = dpf2(23);
+        final float pulse = 0.5f + 0.5f * (float) Math.sin(tSec * 2.6f + phase);
+        final float bp = Math.max(0f, beat);
+
+        canvas.save();
+        canvas.translate(cx, cy);
+        canvas.scale(scaleX, scaleY);
+
+        // resplandor que "respira"
+        canvas.save();
+        final float gs = 1f + 0.14f * pulse + 0.35f * bp;
+        canvas.scale(gs, gs);
+        ithaPaint.setStyle(Paint.Style.FILL);
+        ithaPaint.setShader(fx.glow);
+        ithaPaint.setAlpha(Math.min(0xFF, (int) (0xFF * alpha * (0.65f + 0.35f * pulse + 0.6f * bp))));
+        canvas.drawCircle(0, 0, dp(40), ithaPaint);
+        canvas.restore();
+
+        // cuerpo de cristal
+        ithaPaint.setShader(fx.body);
+        ithaPaint.setAlpha((int) (0xFF * alpha));
+        canvas.drawCircle(0, 0, r, ithaPaint);
+
+        // reflejo brillante arriba a la izquierda
+        ithaPaint.setShader(null);
+        ithaPaint.setColor(0xFFFFFFFF);
+        ithaPaint.setAlpha((int) (0x55 * alpha));
+        canvas.save();
+        canvas.translate(-0.40f * r, -0.52f * r);
+        canvas.rotate(-40f);
+        ithaRect.set(-0.34f * r, -0.16f * r, 0.34f * r, 0.16f * r);
+        canvas.drawOval(ithaRect, ithaPaint);
+        canvas.restore();
+
+        // aro de neon con brillo giratorio
+        ithaPaint.setStyle(Paint.Style.STROKE);
+        ithaPaint.setStrokeWidth(dpf2(1.6f));
+        ithaPaint.setShader(fx.ring);
+        ithaPaint.setAlpha((int) (0xFF * alpha));
+        canvas.save();
+        canvas.rotate(tSec * 140f + phase * 40f);
+        canvas.drawCircle(0, 0, r, ithaPaint);
+        canvas.restore();
+        ithaPaint.setShader(null);
+        ithaPaint.setStyle(Paint.Style.FILL);
+
+        // icono, con un pequeno latido
+        final int sz = dp(38);
+        canvas.save();
+        final float is = 1f + 0.05f * pulse + 0.12f * bp;
+        canvas.scale(is, is);
+        d.setBounds(-sz / 2, -sz / 2, sz / 2, sz / 2);
+        d.setAlpha((int) (0xFF * alpha));
+        d.draw(canvas);
+        canvas.restore();
+
+        // destello que cruza la burbuja cada tanto
+        final float sp = (((tSec + phase * 0.9f) % 3.4f)) / 0.75f;
+        if (sp < 1f) {
+            ithaClip.reset();
+            ithaClip.addCircle(0, 0, r - dpf2(1), android.graphics.Path.Direction.CW);
+            canvas.save();
+            canvas.clipPath(ithaClip);
+            canvas.translate(lerp(-r * 1.3f, r * 1.3f, sp), 0);
+            canvas.rotate(22f);
+            ithaPaint.setShader(fx.shine);
+            ithaPaint.setAlpha((int) (0xFF * alpha * Math.sin(Math.PI * sp)));
+            canvas.drawRect(-dpf2(8), -r * 1.6f, dpf2(8), r * 1.6f, ithaPaint);
+            ithaPaint.setShader(null);
+            canvas.restore();
+        }
+
+        // chispas que titilan alrededor
+        ithaPaint.setShader(null);
+        ithaPaint.setColor(0xFFFFFFFF);
+        for (int k = 0; k < 3; ++k) {
+            float tw = Math.max(0f, (float) Math.sin(tSec * 3.3f + k * 2.3f + phase));
+            tw = tw * tw;
+            if (tw < 0.03f) continue;
+            final float ang = tSec * 0.9f + k * 2.094f + phase;
+            final float sx = (float) Math.cos(ang) * r * 1.18f;
+            final float sy = (float) Math.sin(ang) * r * 1.05f;
+            final float s = dpf2(4.5f) * (0.5f + 0.5f * tw);
+            canvas.save();
+            canvas.translate(sx, sy);
+            canvas.scale(s, s);
+            ithaPaint.setAlpha((int) (0xFF * alpha * tw));
+            canvas.drawPath(ithaStar, ithaPaint);
+            canvas.restore();
+        }
         canvas.restore();
     }
 

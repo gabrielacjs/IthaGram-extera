@@ -1613,7 +1613,7 @@ public class LocaleController {
             return "LOC_ERR:" + key;
         }
         if (res == R.string.AppUpdate || "AppUpdate".equals(key)) {
-            value = value.replaceAll("Telegram", "exteraGram");
+            value = value.replaceAll("Telegram", LocaleUtils.getAppName());
         }
         return value;
     }
