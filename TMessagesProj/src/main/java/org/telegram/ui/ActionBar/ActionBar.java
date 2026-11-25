@@ -3124,6 +3124,14 @@ public class ActionBar extends FrameLayout implements FactorAnimator.Target, The
             if (!doNotDrawCenterGlass && !(org.telegram.messenger.IthaConfig.isChatPillHidden() && org.telegram.messenger.IthaConfig.hasChatHeader(this))) {
                 glassDrawable.draw(canvas);
             }
+        } else if (chatAvatarContainer == null && glassDrawable != null && drawGlassTitle && !drawGlassMiddlePill && !glassOnlyBack
+                && com.exteragram.messenger.utils.ui.ChatHeaderUiHelper.isMaterial3ChatHeaderStyle()
+                && org.telegram.messenger.IthaConfig.hasChatHeader(this)) {
+            // IthaGram: con la cabecera Material 3 no hay pildora, pero el centrado del titulo igual se calcula aqui
+            final int menuWidthWithPadding = menuWidth + ((hasForcedMenuWidth || hasForcedMenuMinWidth) ? (menuWidth > 0 ? g : 0) : (int) (g * animatorHasMenuItems.getFloatValue()));
+            final int leftDefault = hasBackButton ? s + g : 0;
+            final int rightDefault = getWidth() - menuWidthWithPadding;
+            org.telegram.messenger.IthaConfig.layoutChatPill(this, leftDefault, rightDefault, Math.max(searchFactor, actionModeFactor));
         } else if (chatAvatarContainer != null) {
             chatAvatarContainer.setTranslationX(0);
         }

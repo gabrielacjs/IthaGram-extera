@@ -821,6 +821,11 @@ public class ChatAvatarContainer extends FrameLayout implements FactorAnimator.T
     }
 
     /** Calcula la banda de texto y centra el TEXTO del titulo y el subtitulo uno respecto del otro. Devuelve el ancho de la banda. */
+    /** IthaGram: donde empieza el texto respecto al contenedor (cambia con la cabecera Material 3). */
+    public int ithaTextLeft() {
+        return dp(ChatHeaderUiHelper.isMaterial3ChatHeaderStyle() ? avatarSizeInDp + 10.66f : 49.66f);
+    }
+
     public int ithaApplyBand() {
         final int bw = ithaComputeBand();
         ithaBandWidth = bw;

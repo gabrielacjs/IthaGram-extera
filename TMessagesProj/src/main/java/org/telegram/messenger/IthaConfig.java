@@ -59,7 +59,7 @@ public class IthaConfig {
                 final int textW = c.getVisualWidth() + org.telegram.messenger.AndroidUtilities.dp(8)
                         - (avatar ? org.telegram.messenger.AndroidUtilities.dp(70) : org.telegram.messenger.AndroidUtilities.dp(34));
                 final int textEnd = left + c.getLeftPadding()
-                        + (avatar ? org.telegram.messenger.AndroidUtilities.dp(49.66f) : org.telegram.messenger.AndroidUtilities.dp(13)) + Math.max(textW, 0);
+                        + (avatar ? c.ithaTextLeft() : org.telegram.messenger.AndroidUtilities.dp(13)) + Math.max(textW, 0);
                 final int right = textEnd + org.telegram.messenger.AndroidUtilities.dp(16);
                 return Math.max(left + org.telegram.messenger.AndroidUtilities.dp(60), Math.min(rightDefault, right));
             }
@@ -109,7 +109,7 @@ public class IthaConfig {
             org.telegram.ui.Components.ChatAvatarContainer c = (org.telegram.ui.Components.ChatAvatarContainer) child;
             final boolean avatar = c.hasVisibleAvatar();
             // ancho de texto que entra de verdad en la pildora: se le avisa al contenedor para que nunca deje el avatar fuera
-            final int capLeft = c.getLeftPadding() + (avatar && !avatarRight ? org.telegram.messenger.AndroidUtilities.dp(49.66f) : org.telegram.messenger.AndroidUtilities.dp(13));
+            final int capLeft = c.getLeftPadding() + (avatar && !avatarRight ? c.ithaTextLeft() : org.telegram.messenger.AndroidUtilities.dp(13));
             final int capRight = avatar && avatarRight ? org.telegram.messenger.AndroidUtilities.dp(58) : org.telegram.messenger.AndroidUtilities.dp(16);
             final int cap = Math.max(org.telegram.messenger.AndroidUtilities.dp(40), (rightDefault - leftDefault) - capLeft - capRight);
             if (c.ithaPillCap != cap) {
@@ -127,7 +127,7 @@ public class IthaConfig {
                 textW = c.ithaApplyBand();
             }
             int contentRight = leftDefault + c.getLeftPadding()
-                    + (avatar && !avatarRight ? org.telegram.messenger.AndroidUtilities.dp(49.66f) : org.telegram.messenger.AndroidUtilities.dp(13))
+                    + (avatar && !avatarRight ? c.ithaTextLeft() : org.telegram.messenger.AndroidUtilities.dp(13))
                     + textW + (avatar && avatarRight ? org.telegram.messenger.AndroidUtilities.dp(58) : org.telegram.messenger.AndroidUtilities.dp(16));
             contentRight = Math.max(leftDefault + org.telegram.messenger.AndroidUtilities.dp(60), Math.min(rightDefault, contentRight));
             final int contentW = contentRight - leftDefault;
@@ -139,7 +139,7 @@ public class IthaConfig {
             pillLeft = Math.round(left + (leftDefault - left) * k);
             pillRight = Math.round((left + pillW) + (rightDefault - (left + pillW)) * k);
             if (center) {
-                c.setTranslationX((left + (pillW - contentW) / 2f - leftDefault) * (1f - k));
+                c.setTranslationX((left + (pillW - contentW) / 2f - (com.exteragram.messenger.utils.ui.ChatHeaderUiHelper.isMaterial3ChatHeaderStyle() ? c.getLeft() : leftDefault)) * (1f - k));
             }
             return;
         }

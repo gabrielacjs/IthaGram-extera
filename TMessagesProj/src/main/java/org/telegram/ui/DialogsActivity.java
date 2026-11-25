@@ -308,6 +308,7 @@ import me.vkryl.core.BitwiseUtils;
 public class DialogsActivity extends BaseFragment implements NotificationCenter.NotificationCenterDelegate, FloatingDebugProvider, FactorAnimator.Target, MainTabsActivity.TabFragmentDelegate {
     private final int ADDITIONAL_LIST_HEIGHT_DP = Build.VERSION.SDK_INT >= 31 ? 48 : 0;
 
+    public static volatile boolean ithaHideTopBlur;
     private static final boolean TMP_DISABLE_TOPICS_TWO_COLUMNS = false;
 
     public static final int MAIN_TABS_HEIGHT = 56;
@@ -978,8 +979,35 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             return result;
         }
 
+        private boolean ithaSkipTopBlur() {
+            // IthaGram: se salta la franja si el plugin lo pidio, o si la lista tiene un fondo de imagen puesto por un plugin de fondos
+            return ithaHideTopBlur || getBackground() instanceof android.graphics.drawable.BitmapDrawable;
+        }
+
+        @Override
+        public void drawBlurRect(Canvas canvas, float y, Rect rectTmp, Paint blurScrimPaint, boolean top, float alpha) {
+            // IthaGram: variante con alpha (fondo adaptable de extera)
+            if (top && ithaSkipTopBlur()) {
+                return;
+            }
+            super.drawBlurRect(canvas, y, rectTmp, blurScrimPaint, top, alpha);
+        }
+
+        @Override
+        public void drawBlurRect(Canvas canvas, float y, Rect rectTmp, Paint blurScrimPaint, boolean top, int blurAlpha) {
+            // IthaGram: variante con alpha entero
+            if (top && ithaSkipTopBlur()) {
+                return;
+            }
+            super.drawBlurRect(canvas, y, rectTmp, blurScrimPaint, top, blurAlpha);
+        }
+
         @Override
         public void drawBlurRect(Canvas canvas, float y, Rect rectTmp, Paint blurScrimPaint, boolean top) {
+            // IthaGram: los plugins de fondo activan esto para que la franja de arriba (historias) no tape el fondo
+            if (top && ithaSkipTopBlur()) {
+                return;
+            }
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q || !SharedConfig.chatBlurEnabled() || iBlur3SourceGlassFrosted == null || !BlurredBackgroundProviderImpl.checkBlurEnabled(currentAccount, resourceProvider)) {
                 canvas.drawRect(rectTmp, blurScrimPaint);
                 return;
