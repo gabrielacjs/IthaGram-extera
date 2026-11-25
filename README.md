@@ -1,3 +1,37 @@
+<h1 align="center">IthaGram</h1>
+
+<p align="center">
+  A fork of <a href="https://github.com/exteraSquad/exteraGram">exteraGram</a> for Android, which is itself built on the
+  <a href="https://github.com/DrKLO/Telegram">official Telegram sources</a>.
+</p>
+
+## What IthaGram adds on top of exteraGram
+
+- **Download manager**: a queue with up to 3 simultaneous downloads, which follows the save folder chosen in the settings
+  (`IthaGram` by default).
+- **Centered chat titles** and **iOS-style pills** in the chat header.
+- **Badges** for supporters, shown next to names in chats and profiles.
+- IthaGram branding and launcher icons (plus the alternative icons Itha Aurora, Coral, Dorado, Hielo and Menta, next to
+  the original exteraGram ones, which keep their authors' credit).
+
+Everything else (plugins, Material You, settings) comes from exteraGram.
+
+## Installing
+
+IthaGram uses the package `com.gabi.ithagram`. If you update from an older IthaGram release and something looks broken,
+clear the app data or install it fresh.
+
+## License and credits
+
+IthaGram is free software under the GNU GPL v3 or later, with the additional terms in
+[`ADDITIONAL_TERMS.md`](ADDITIONAL_TERMS.md), like exteraGram. The credit for the original work goes to the
+[exteraGram](https://github.com/exteraSquad/exteraGram) and [Telegram](https://github.com/DrKLO/Telegram) authors.
+The launcher icons from the exteraGram contest keep the credit of their authors.
+
+---
+
+# exteraGram (original README)
+
 <p align="center">
   <img src="TMessagesProj/src/main/res-appicons/mipmap-xxxhdpi/ic_launcher.webp" width="96" alt="exteraGram">
 </p>
