@@ -44,3 +44,6 @@ API_KEYS*
 **.project
 **/.settings
 **.classpath
+
+build_log.txt
+*.apk
