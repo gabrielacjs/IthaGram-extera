@@ -45,7 +45,7 @@
     <string name="WeatherPill">Weather</string>
     <string name="WeatherSettingsInfo">Choose how to determine the location for the weather display in search.</string>
     <string name="WeatherLocation">Location Detection</string>
-    <string name="WeatherLocationPermissionNo">exteraGram needs access to your location to display the current weather.</string>
+    <string name="WeatherLocationPermissionNo">IthaGram needs access to your location to display the current weather.</string>
     <string name="WeatherLocationPermissionGrant">Grant Permission</string>
     <string name="WeatherLocationServicesEnable">Enable Location</string>
     <string name="WeatherPillTopInfo">Weather widget settings for Pill Stack.</string>
@@ -724,7 +724,7 @@
     <string name="PauseOnMinimizeVideo">Video</string>
     <string name="PauseOnMinimizeVoice">Voice</string>
     <string name="PauseOnMinimizeRound">Round</string>
-    <string name="PauseOnMinimizeInfo">Pauses media playback when the device is locked or exteraGram is minimized.</string>
+    <string name="PauseOnMinimizeInfo">Pauses media playback when the device is locked or IthaGram is minimized.</string>
     <string name="SwipeToPip">Swipe to PiP</string>
     <string name="UnmuteWithVolumeButtons">Unmute Videos with Volume Buttons</string>
     <string name="UnmuteWithVolumeButtonsInfo">Pressing a volume button will unmute the video instead of changing the system volume.</string>
@@ -1185,7 +1185,7 @@
 
     <!-- AdBlock -->
     <string name="PageBlocked">Page blocked</string>
-    <string name="PageBlockedDescription">exteraGram has prevented the following page from loading:\n**%1$s**</string>
+    <string name="PageBlockedDescription">IthaGram has prevented the following page from loading:\n**%1$s**</string>
     <string name="PageBlockedGoBack">Go back</string>
     <string name="BlockAds">Block Ads</string>
     <string name="BlockedRequests_one">%1$d blocked</string>

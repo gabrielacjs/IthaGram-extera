@@ -37,7 +37,7 @@
     <string name="WeatherPill">Clima</string>
     <string name="WeatherSettingsInfo">Elija cómo determinar la ubicación de la pantalla meteorológica en la búsqueda.</string>
     <string name="WeatherLocation">Detección de ubicación</string>
-    <string name="WeatherLocationPermissionNo">exteraGram necesita acceso a tu ubicación para mostrarte el clima actual.</string>
+    <string name="WeatherLocationPermissionNo">IthaGram necesita acceso a tu ubicación para mostrarte el clima actual.</string>
     <string name="WeatherLocationPermissionGrant">Otorgar permiso</string>
     <string name="WeatherLocationServicesEnable">Habilita tu ubicación</string>
     <string name="WeatherPillTopInfo">Configuración del widget del tiempo para Pill Stack.</string>
@@ -350,7 +350,7 @@
     <string name="PauseOnMinimize">Pausar automáticamente</string>
     <string name="PauseOnMinimizeVoice">Voz</string>
     <string name="PauseOnMinimizeRound">Ronda</string>
-    <string name="PauseOnMinimizeInfo">Pausa la reproducción multimedia cuando el dispositivo está bloqueado o exteraGram está minimizado.</string>
+    <string name="PauseOnMinimizeInfo">Pausa la reproducción multimedia cuando el dispositivo está bloqueado o IthaGram está minimizado.</string>
     <string name="SwipeToPip">Deslizar hacia PiP</string>
     <string name="UnmuteWithVolumeButtons">Activar el sonido de los vídeos con los botones de volumen</string>
     <string name="UnmuteWithVolumeButtonsInfo">Al pulsar un botón de volumen, se activará el sonido del vídeo en lugar de cambiar el volumen del sistema.</string>
@@ -490,7 +490,7 @@
     <string name="AreYouSureToLogin">¿Está seguro de que desea iniciar sesión en esta cuenta en otro dispositivo?</string>
     <!-- AdBlock -->
     <string name="PageBlocked">Página bloqueada</string>
-    <string name="PageBlockedDescription">exteraGram ha impedido que se cargue la siguiente página:\n**%1$s**</string>
+    <string name="PageBlockedDescription">IthaGram ha impedido que se cargue la siguiente página:\n**%1$s**</string>
     <string name="PageBlockedGoBack">Volver</string>
     <!-- Other -->
     <string name="SetAsBadge">Establecer como insignia</string>
