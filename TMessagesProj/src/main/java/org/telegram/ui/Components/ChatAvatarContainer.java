@@ -258,7 +258,7 @@ public class ChatAvatarContainer extends FrameLayout implements FactorAnimator.T
             if (parentFragment == null || (parentFragment.getChatMode() != ChatActivity.MODE_QUICK_REPLIES && parentFragment.getChatMode() != ChatActivity.MODE_WELCOME_MESSAGES && parentFragment.getChatMode() != ChatActivity.MODE_EDIT_BUSINESS_LINK) && parentFragment.getChatMode() != ChatActivity.MODE_SUGGESTIONS && !parentFragment.isInBotForumMode()) {
                 sharedMediaPreloader = new SharedMediaLayout.SharedMediaPreloader(baseFragment);
             }
-            avatarImageIsHidden = parentFragment != null && (
+            avatarImageIsHidden = org.telegram.messenger.IthaConfig.isChatAvatarHidden() || parentFragment != null && (
                 parentFragment.isThreadChat() && !parentFragment.isReplyChatComment() ||
                 parentFragment.getChatMode() == ChatActivity.MODE_PINNED ||
                 parentFragment.getChatMode() == ChatActivity.MODE_QUICK_REPLIES ||
@@ -699,7 +699,12 @@ public class ChatAvatarContainer extends FrameLayout implements FactorAnimator.T
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         final int width = MeasureSpec.getSize(widthMeasureSpec);
-        final int availableWidth = width - dp((avatarImageView.getVisibility() == VISIBLE ? avatarSizeInDp + 12 : 0) + 16);
+        int availableWidth = width - dp((avatarImageView.getVisibility() == VISIBLE ? avatarSizeInDp + 12 : 0) + 16);
+        // IthaGram: el texto nunca ocupa mas de lo que entra en la pildora
+        if (ithaPillCap > 0 && getParent() instanceof ActionBar && (org.telegram.messenger.IthaConfig.isChatTitleCentered()
+                || org.telegram.messenger.IthaConfig.isChatAvatarRight() || org.telegram.messenger.IthaConfig.isChatPillCompact())) {
+            availableWidth = Math.max(dp(40), Math.min(availableWidth, ithaPillCap));
+        }
         final int avatarSize = ChatHeaderUiHelper.getAvatarSizePx(avatarSizeInDp);
         avatarImageView.measure(MeasureSpec.makeMeasureSpec(avatarSize, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(avatarSize, MeasureSpec.EXACTLY));
         titleTextView.measure(MeasureSpec.makeMeasureSpec(availableWidth, MeasureSpec.AT_MOST), MeasureSpec.makeMeasureSpec(dp(24 + 8), MeasureSpec.AT_MOST));
@@ -707,6 +712,14 @@ public class ChatAvatarContainer extends FrameLayout implements FactorAnimator.T
             subtitleTextView.measure(MeasureSpec.makeMeasureSpec(availableWidth, MeasureSpec.AT_MOST), MeasureSpec.makeMeasureSpec(dp(20), MeasureSpec.AT_MOST));
         } else if (animatedSubtitleTextView != null) {
             animatedSubtitleTextView.measure(MeasureSpec.makeMeasureSpec(availableWidth, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(dp(20), MeasureSpec.AT_MOST));
+        }
+        if ((org.telegram.messenger.IthaConfig.isChatTitleCentered() || org.telegram.messenger.IthaConfig.isChatAvatarRight()) && subtitleTextView != null && getParent() instanceof ActionBar) {
+            // centrado como Entiny: los dos textos miden todo el ancho disponible (asi nunca se cortan) y se acomodan en onLayout
+            ithaAvailWidth = availableWidth;
+            titleTextView.setGravity(Gravity.LEFT);
+            subtitleTextView.setGravity(Gravity.LEFT);
+            titleTextView.measure(MeasureSpec.makeMeasureSpec(availableWidth, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(dp(24 + 8), MeasureSpec.AT_MOST));
+            subtitleTextView.measure(MeasureSpec.makeMeasureSpec(availableWidth, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(dp(20), MeasureSpec.AT_MOST));
         }
         if (communityItem != null) {
             communityItem.measure(MeasureSpec.makeMeasureSpec(dp(14), MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(dp(14), MeasureSpec.EXACTLY));
@@ -790,6 +803,67 @@ public class ChatAvatarContainer extends FrameLayout implements FactorAnimator.T
     }
 
     private boolean glassMode;
+    // IthaGram: ancho de la banda de texto (centrado) y ancho disponible, para que la barra detecte textos nuevos
+    public int ithaBandWidth, ithaAvailWidth;
+    /** IthaGram: ancho maximo de texto que entra de verdad dentro de la pildora (lo calcula la barra con el ancho real de la pildora). */
+    public int ithaPillCap;
+
+    /** Ancho de la banda de texto: el titulo (con el espacio de sus iconos a ambos lados) o el subtitulo, el mayor. */
+    public int ithaComputeBand() {
+        if (titleTextView == null || subtitleTextView == null || ithaAvailWidth <= 0) {
+            return 0;
+        }
+        final int tText = (int) Math.ceil(titleTextView.getTextWidth());
+        final int tExact = (int) Math.ceil(titleTextView.getExactWidthIncludeDrawables());
+        final int dr = Math.max(0, tExact - tText);
+        final int sw = (int) Math.ceil(subtitleTextView.getExactWidthIncludeDrawables());
+        return Math.min(ithaAvailWidth, Math.max(tText + 2 * dr, sw));
+    }
+
+    /** Calcula la banda de texto y centra el TEXTO del titulo y el subtitulo uno respecto del otro. Devuelve el ancho de la banda. */
+    public int ithaApplyBand() {
+        final int bw = ithaComputeBand();
+        ithaBandWidth = bw;
+        if (bw <= 0) {
+            return bw;
+        }
+        final int tText = (int) Math.ceil(titleTextView.getTextWidth());
+        final int sw = (int) Math.ceil(subtitleTextView.getExactWidthIncludeDrawables());
+        final boolean center = org.telegram.messenger.IthaConfig.isChatTitleCentered();
+        final boolean avatarRight = org.telegram.messenger.IthaConfig.isChatAvatarRight() && hasVisibleAvatar();
+        // con el avatar a la derecha el texto arranca donde arrancaria sin avatar
+        final float shift = avatarRight ? -dp(36.66f) : 0f;
+        final float dt = (center ? Math.max(0, (bw - Math.min(tText, bw)) / 2f) : 0f) + shift;
+        final float ds = (center ? Math.max(0, (bw - Math.min(sw, bw)) / 2f) : 0f) + shift;
+        titleTextView.setTranslationX(dt);
+        subtitleTextView.setTranslationX(ds);
+        SimpleTextView titleCopy = this.titleTextLargerCopyView.get();
+        if (titleCopy != null) {
+            titleCopy.setTranslationX(dt);
+        }
+        SimpleTextView subtitleCopy = this.subtitleTextLargerCopyView.get();
+        if (subtitleCopy != null) {
+            subtitleCopy.setTranslationX(ds);
+        }
+        if (avatarRight) {
+            // el avatar va justo despues de la banda de texto (y sus detalles con el)
+            final float ax = dp(13) + bw + dp(8) - 1;
+            avatarImageView.setTranslationX(ax);
+            if (communityItem != null) {
+                communityItem.setTranslationX(ax);
+            }
+            if (timeItem != null) {
+                timeItem.setTranslationX(ax);
+            }
+            if (starBgItem != null) {
+                starBgItem.setTranslationX(ax);
+            }
+            if (starFgItem != null) {
+                starFgItem.setTranslationX(ax);
+            }
+        }
+        return bw;
+    }
     public void setGlassMode() {
         if (titleTextView != null) {
             titleTextView.setTextSizePx(dp(17.5f));
@@ -876,6 +950,9 @@ public class ChatAvatarContainer extends FrameLayout implements FactorAnimator.T
         SimpleTextView subtitleTextLargerCopyView = this.subtitleTextLargerCopyView.get();
         if (subtitleTextLargerCopyView != null) {
             subtitleTextLargerCopyView.layout(l, subtitleTop, l + subtitleTextLargerCopyView.getMeasuredWidth(), subtitleTop + subtitleTextLargerCopyView.getTextHeight());
+        }
+        if ((org.telegram.messenger.IthaConfig.isChatTitleCentered() || org.telegram.messenger.IthaConfig.isChatPillCompact() || org.telegram.messenger.IthaConfig.isChatAvatarRight()) && getParent() instanceof android.view.View) {
+            ((android.view.View) getParent()).invalidate();
         }
     }
 
@@ -1905,6 +1982,6 @@ public class ChatAvatarContainer extends FrameLayout implements FactorAnimator.T
         } else {
             width += dp(34);
         }
-        return (int) width;
+        return (int) width - (org.telegram.messenger.IthaConfig.isChatPillCompact() ? dp(8) : 0);
     }
 }

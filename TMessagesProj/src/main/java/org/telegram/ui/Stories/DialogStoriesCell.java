@@ -913,10 +913,19 @@ public class DialogStoriesCell extends FrameLayout implements NotificationCenter
             int cellWidth = dp(72);
             lastViewRight += -cellWidth + getAvatarRight(cellWidth, collapsedProgress) + dp(16);
             float titleBaseX = lastViewRight;
+            float ithaTitleShift = 0f;
+            if (ExteraConfig.getCenterTitle()) {
+                // IthaGram: con "titulo centrado" el titulo plegado tambien se centra (entre los avatares y los botones)
+                final float ithaTitleW = titleView.getDrawable().getCurrentWidth() * titleScale;
+                final float ithaRightBound = getWidth() - actionBar.menu.getVisibleItemsMeasuredWidthWithAlpha() * progress - dp(6);
+                float ithaX = Math.min(getWidth() / 2f - ithaTitleW / 2f, ithaRightBound - ithaTitleW);
+                ithaTitleShift = Math.max(0f, ithaX - titleBaseX);
+                titleBaseX += ithaTitleShift;
+            }
             float titleAmplitude = dp(10) * (titleOverrideForward ? -1 : 1);
             float titleInOffset = titleOverrideAnimator != null ? -titleAmplitude * (1f - titleOverrideProgress) : 0;
             titleView.setTranslationX(titleBaseX + titleInOffset);
-            titleView.getDrawable().setRightPadding(lastViewRight - dp(12) + actionBar.menu.getVisibleItemsMeasuredWidthWithAlpha() * progress);
+            titleView.getDrawable().setRightPadding(lastViewRight + ithaTitleShift - dp(12) + actionBar.menu.getVisibleItemsMeasuredWidthWithAlpha() * progress);
             titleView.setAlpha(progress * titleOverrideProgress);
 
             titleViewOut.setPivotX(0);
@@ -925,7 +934,7 @@ public class DialogStoriesCell extends FrameLayout implements NotificationCenter
             titleViewOut.setTranslationY(titleBaseY);
             if (titleOverrideAnimator != null) {
                 titleViewOut.setTranslationX(titleBaseX + titleAmplitude * titleOverrideProgress);
-                titleViewOut.getDrawable().setRightPadding(lastViewRight - dp(12) + actionBar.menu.getVisibleItemsMeasuredWidthWithAlpha() * progress);
+                titleViewOut.getDrawable().setRightPadding(lastViewRight + ithaTitleShift - dp(12) + actionBar.menu.getVisibleItemsMeasuredWidthWithAlpha() * progress);
                 titleViewOut.setAlpha(progress * (1f - titleOverrideProgress));
                 titleViewOut.setVisibility(VISIBLE);
             } else {

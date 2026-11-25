@@ -92,6 +92,16 @@ public class FileLoaderPriorityQueue {
         int lastPriority = 0;
         boolean pauseAllNextOperations = false;
         int max = type == TYPE_LARGE ? MessagesController.getInstance(currentAccount).largeQueueMaxActiveOperations : MessagesController.getInstance(currentAccount).smallQueueMaxActiveOperations;
+        if (type == TYPE_LARGE) {
+            // IthaGram: si el gestor de descargas esta corriendo, respetar su limite (hasta 3) en vez del tope del servidor
+            try {
+                DownloadQueueManager dqm = DownloadQueueManager.getInstance();
+                if (dqm != null && dqm.isRunning()) {
+                    max = Math.max(max, dqm.getMaxConcurrent());
+                }
+            } catch (Throwable ignore) {
+            }
+        }
         tmpListOperations.clear();
         // Until the visible story can be shown, other large downloads wait, as they would share its bandwidth.
         FileLoadOperation visibleStory = null;

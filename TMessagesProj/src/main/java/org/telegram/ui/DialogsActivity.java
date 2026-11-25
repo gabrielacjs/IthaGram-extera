@@ -3172,6 +3172,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             statusDrawable.setParticles(false, animated);
             actionBar.setRightDrawableOnClick(null);
         }
+        actionBar.refreshTitleRightDrawable();
         statusDrawable.setColor(getThemedColor(Theme.key_profile_verifiedBackground));
         if (animatedStatusView != null) {
             animatedStatusView.setColor(getThemedColor(Theme.key_profile_verifiedBackground));
@@ -13975,6 +13976,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             return;
         }
 
+        if (!isArchive()) {
+            io.add(R.drawable.msg_download, org.telegram.messenger.DownloadQueueManager.tr("Gestor de descargas", "Download manager"), () -> presentFragment(new DownloadQueueActivity()));
+        }
         if (isArchive()) {
             io.add(R.drawable.msg_customize, getString(R.string.ArchiveSettings), () -> presentFragment(new ArchiveSettingsActivity()));
             io.add(R.drawable.msg_help, getString(R.string.HowDoesItWork), this::showArchiveHelp);

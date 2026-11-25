@@ -942,6 +942,27 @@ public class ActionBar extends FrameLayout implements FactorAnimator.Target, The
         fromBottom = false;
     }
 
+    /** IthaGram: vuelve a evaluar el emoji del titulo cuando el dibujo se cargo despues de setTitle (antes quedaba oculto hasta el siguiente setTitle). */
+    public void refreshTitleRightDrawable() {
+        if (titleTextView[0] == null || lastRightDrawable == null || titleOverlayShown) {
+            return;
+        }
+        final Drawable current = titleTextView[0].getRightDrawable();
+        final Drawable visible = getVisibleTitleRightDrawable(lastRightDrawable);
+        if (current == visible) {
+            return;
+        }
+        if (attached && current instanceof AnimatedEmojiDrawable.SwapAnimatedEmojiDrawable) {
+            ((AnimatedEmojiDrawable.SwapAnimatedEmojiDrawable) current).setParentView(null);
+        }
+        titleTextView[0].setRightDrawable(visible);
+        if (attached && visible instanceof AnimatedEmojiDrawable.SwapAnimatedEmojiDrawable) {
+            ((AnimatedEmojiDrawable.SwapAnimatedEmojiDrawable) visible).setParentView(titleTextView[0]);
+        }
+        titleTextView[0].setRightDrawableOnClick(visible != null ? rightDrawableOnClickListener : null);
+        titleTextView[0].requestLayout();
+    }
+
     public void setRightDrawableOnClick(OnClickListener onClickListener) {
         rightDrawableOnClickListener = onClickListener;
         if (titleTextView[0] != null) {
@@ -2914,6 +2935,8 @@ public class ActionBar extends FrameLayout implements FactorAnimator.Target, The
 
     public void checkAvatarContainerWidth(boolean animated) {
         if (chatAvatarContainer == null) {
+            // IthaGram: el contenedor aviso que cambio el texto; redibujar para recalcular la pildora
+            invalidate();
             return;
         }
 
@@ -3091,13 +3114,14 @@ public class ActionBar extends FrameLayout implements FactorAnimator.Target, The
                 left = lerp(getWidth() - Math.max(s, menuWidth) - p * 2, leftDefault, searchFieldVisibleAlpha);
                 right = getWidth();
             } else {
-                left = leftDefault;
-                right = rightDefault;
+                org.telegram.messenger.IthaConfig.layoutChatPill(this, leftDefault, rightDefault, Math.max(searchFactor, actionModeFactor));
+                left = org.telegram.messenger.IthaConfig.pillLeft;
+                right = org.telegram.messenger.IthaConfig.pillRight;
             }
 
             glassDrawable.setBounds(left, t, right, b);
             glassDrawable.setAlpha((int) (middlePillAlpha * 255));
-            if (!doNotDrawCenterGlass) {
+            if (!doNotDrawCenterGlass && !(org.telegram.messenger.IthaConfig.isChatPillHidden() && org.telegram.messenger.IthaConfig.hasChatHeader(this))) {
                 glassDrawable.draw(canvas);
             }
         } else if (chatAvatarContainer != null) {

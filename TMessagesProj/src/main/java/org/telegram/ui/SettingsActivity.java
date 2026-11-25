@@ -600,7 +600,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
         titleView.setText(Emoji.replaceEmoji(UserObject.getUserName(user), titleView.getPaint().getFontMetricsInt(), false));
         final StringBuilder sb = new StringBuilder();
         if (user != null && !ExteraConfig.getHidePhoneNumber()) {
-            sb.append(PhoneFormat.getInstance().format("+" + user.phone));
+            sb.append(org.telegram.messenger.IthaConfig.maskPhone(PhoneFormat.getInstance().format("+" + user.phone)));
         }
         final String username = UserObject.getPublicUsername(user);
         if (username != null) {
@@ -609,7 +609,8 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
             }
             sb.append("@").append(username);
         }
-        subtitleView.setText(sb);
+        subtitleView.setText(org.telegram.messenger.IthaConfig.fixHeader(sb));
+        org.telegram.messenger.IthaConfig.settingsRef = new java.lang.ref.WeakReference<>(this);
 
         versionView.setText(AppUtils.getVersionText());
     }
@@ -862,6 +863,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
             items.add(UItem.asShadow(null));
         }
 
+        items.add(SettingCell.Factory.of(40, IconBackgroundColors.PURPLE.top, IconBackgroundColors.PURPLE.bottom, R.drawable.settings_features, "Itha Ajustes"));
         items.add(SettingCell.Factory.of(1, IconBackgroundColors.BLUE.top, IconBackgroundColors.BLUE.bottom, R.drawable.settings_account, getString(R.string.SettingsAccount), getString(R.string.SettingsAccountInfo)));
         items.add(SettingCell.Factory.of(2, IconBackgroundColors.ORANGE.top, IconBackgroundColors.ORANGE.bottom, R.drawable.settings_chat, getString(R.string.SettingsChat), getString(R.string.SettingsChatInfo)));
         items.add(SettingCell.Factory.of(3, IconBackgroundColors.GREEN.top, IconBackgroundColors.GREEN.bottom, R.drawable.settings_privacy, getString(R.string.SettingsPrivacySecurity), getString(R.string.SettingsPrivacySecurityInfo)));
@@ -1020,6 +1022,9 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
                 break;
             case 10:
                 presentSettingFragment(new LanguageSelectActivity());
+                break;
+            case 40:
+                presentSettingFragment(new IthaSettingsActivity());
                 break;
 
             case 11:

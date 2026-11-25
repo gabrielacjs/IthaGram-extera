@@ -1441,6 +1441,7 @@ public class ChatActivity extends BaseFragment implements
     public final static int OPTION_REPLY = 8;
     public final static int OPTION_ADD_TO_STICKERS_OR_MASKS = 9;
     public final static int OPTION_SAVE_TO_DOWNLOADS_OR_MUSIC = 10;
+    public final static int OPTION_ADD_TO_DOWNLOAD_QUEUE = 9000;
     public final static int OPTION_ADD_TO_GIFS = 11;
     public final static int OPTION_EDIT = 12;
     public final static int OPTION_PIN = 13;
@@ -1918,6 +1919,7 @@ public class ChatActivity extends BaseFragment implements
     private final static int change_colors = 27;
     private final static int tag_message = 28;
     private final static int boost_group = 29;
+    private final static int queue_add_selected = 9001;
     private final static int to_beginning = 95;
 
     private final static int bot_help = 30;
@@ -4284,6 +4286,46 @@ public class ChatActivity extends BaseFragment implements
                             BulletinFactory.of(ChatActivity.this).createDownloadBulletin(isMusic ? BulletinFactory.FileType.AUDIOS : BulletinFactory.FileType.UNKNOWNS, count, themeDelegate).show();
                         }
                     });
+                } else if (id == queue_add_selected) {
+                    // IthaGram: agregar todos los archivos seleccionados a la cola de descarga
+                    ArrayList<MessageObject> queueSelected = new ArrayList<>();
+                    for (int a = 1; a >= 0; a--) {
+                        for (int b = 0; b < selectedMessagesIds[a].size(); b++) {
+                            queueSelected.add(selectedMessagesIds[a].valueAt(b));
+                        }
+                        selectedMessagesIds[a].clear();
+                        selectedMessagesCanCopyIds[a].clear();
+                        selectedMessagesCanStarIds[a].clear();
+                    }
+                    int queueAdded = 0;
+                    for (MessageObject queueMessage : queueSelected) {
+                        try {
+                            if (queueMessage == null || queueMessage.getDocument() == null) {
+                                continue;
+                            }
+                            File queueFile = FileLoader.getInstance(currentAccount).getPathToMessage(queueMessage.messageOwner);
+                            if (queueFile != null && queueFile.exists()) {
+                                continue;
+                            }
+                            if (org.telegram.messenger.DownloadQueueManager.getInstance().add(currentAccount, queueMessage)) {
+                                queueAdded++;
+                            }
+                        } catch (Throwable queueError) {
+                            FileLog.e(queueError);
+                        }
+                    }
+                    hideActionMode();
+                    updatePinnedMessageView(true);
+                    updateVisibleRows();
+                    if (queueAdded > 0) {
+                        BulletinFactory.of(ChatActivity.this).createSimpleBulletin(R.raw.contact_check,
+                                org.telegram.messenger.DownloadQueueManager.tr(queueAdded + " archivo(s) agregado(s) a la cola de descarga", queueAdded + " file(s) added to the download queue"),
+                                org.telegram.messenger.DownloadQueueManager.tr("Abrir", "Open"),
+                                () -> presentFragment(new DownloadQueueActivity())).show();
+                    } else {
+                        BulletinFactory.of(ChatActivity.this).createSimpleBulletin(R.raw.error,
+                                org.telegram.messenger.DownloadQueueManager.tr("No hay archivos nuevos para agregar", "No new files to add")).show();
+                    }
                 } else if (id == chat_enc_timer) {
                     if (getParentActivity() == null) {
                         return;
@@ -4653,6 +4695,7 @@ public class ChatActivity extends BaseFragment implements
             getConnectionsManager().bindRequestToGuid(req, classGuid);
         } else {
             actionBar.addView(avatarContainer, 0, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.MATCH_PARENT, Gravity.TOP | Gravity.LEFT, ChatHeaderUiHelper.getAvatarContainerLeftMargin(inPreviewMode), 0, 52, 0));
+            avatarContainer.setActionBar(actionBar);
             actionBar.createMenu().bringToFront();
         }
         actionBar.setOnActionModeFactorChangeListener(() -> {
@@ -11306,6 +11349,7 @@ public class ChatActivity extends BaseFragment implements
         if (currentEncryptedChat == null) {
             final boolean isSavedMessages = getDialogId() == getUserConfig().getClientUserId() && (chatMode == 0 || chatMode == MODE_SAVED);
             actionModeViews.add(actionMode.addItemWithWidth(save_to, R.drawable.msg_download, dp(48), LocaleController.getString(R.string.SaveToMusic)));
+            actionModeViews.add(actionMode.addItemWithWidth(queue_add_selected, R.drawable.menu_album_add, dp(48), org.telegram.messenger.DownloadQueueManager.tr("Agregar a la cola de descarga", "Add to download queue")));
             actionModeViews.add(actionMode.addItemWithWidth(edit, R.drawable.msg_edit, dp(48), LocaleController.getString(R.string.Edit)));
             if (isSavedMessages) {
                 actionModeViews.add(actionMode.addItemWithWidth(tag_message, R.drawable.menu_tag_edit, dp(48), LocaleController.getString(R.string.AccDescrTagMessage)));
@@ -36784,6 +36828,18 @@ public class ChatActivity extends BaseFragment implements
                 showDialog(alert);
                 break;
             }
+            case OPTION_ADD_TO_DOWNLOAD_QUEUE: {
+                if (org.telegram.messenger.DownloadQueueManager.getInstance().add(currentAccount, selectedObject)) {
+                    BulletinFactory.of(this).createSimpleBulletin(R.raw.contact_check,
+                            org.telegram.messenger.DownloadQueueManager.tr("Este mensaje se agregó a la cola de descarga", "This message was added to the download queue"),
+                            org.telegram.messenger.DownloadQueueManager.tr("Abrir", "Open"),
+                            () -> presentFragment(new DownloadQueueActivity())).show();
+                } else {
+                    BulletinFactory.of(this).createSimpleBulletin(R.raw.error,
+                            org.telegram.messenger.DownloadQueueManager.tr("Ya está en la cola", "Already in the queue")).show();
+                }
+                break;
+            }
             case OPTION_SAVE_TO_DOWNLOADS_OR_MUSIC: {
                 if (Build.VERSION.SDK_INT >= 23 && (Build.VERSION.SDK_INT <= 28 || BuildVars.NO_SCOPED_STORAGE) && getParentActivity().checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
                     getParentActivity().requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 4);
@@ -50186,6 +50242,21 @@ public class ChatActivity extends BaseFragment implements
             }
         }
 
+        // IthaGram: cola de descarga, solo para archivos que todavia no estan descargados
+        try {
+            if (selectedObject != null && selectedObject.getDocument() != null
+                    && !selectedObject.isVoiceOnce() && !selectedObject.isRoundOnce()
+                    && !options.contains(OPTION_ADD_TO_DOWNLOAD_QUEUE)) {
+                File queueFile = FileLoader.getInstance(currentAccount).getPathToMessage(selectedObject.messageOwner);
+                if (queueFile == null || !queueFile.exists()) {
+                    items.add(org.telegram.messenger.DownloadQueueManager.tr("Agregar a la cola de descarga", "Add to download queue"));
+                    options.add(OPTION_ADD_TO_DOWNLOAD_QUEUE);
+                    icons.add(R.drawable.msg_download);
+                }
+            }
+        } catch (Throwable queueError) {
+            FileLog.e(queueError);
+        }
         if (getMessagesController().config.walletAvailable.get() &&
                 selectedObject.messageOwner.action instanceof TLRPC.TL_messageActionGramTransfer
                 && selectedObject.getDialogId() > 0

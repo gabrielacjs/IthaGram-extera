@@ -440,6 +440,18 @@
             android:foregroundServiceType="dataSync"
         />
         <service
+            android:name="org.telegram.messenger.DownloadQueueService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync"
+        />
+        <activity
+            android:name="org.telegram.ui.IthaRestartActivity"
+            android:process=":ithaphoenix"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:taskAffinity=""
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+        <service
             android:name=".NotificationRepeat"
             android:exported="false"
             android:foregroundServiceType="dataSync"
