@@ -1487,6 +1487,8 @@ public class ChatActivity extends BaseFragment implements
     public final static int OPTION_WELCOME_REVERT = 116;
     public final static int OPTION_SEND_MONEY = 117;
     public final static int OPTION_STOP_LIVE_LOCATION = 118;
+    /** IthaGram: subir la foto o el video del mensaje a tu historia. */
+    public final static int OPTION_ITHA_POST_STORY = 130;
 
     public final static int OPTION_SAVE_MESSAGE = 200;
     private final static int OPTION_REPEAT = 201;
@@ -36320,6 +36322,67 @@ public class ChatActivity extends BaseFragment implements
         return fragment;
     }
 
+    /** IthaGram: 0 = no se puede subir a historia, 1 = foto, 2 = video (tambien cuando se envio como archivo mp4, png o jpg). */
+    private int ithaStoryKind(MessageObject message) {
+        if (message == null || message.messageOwner == null) {
+            return 0;
+        }
+        if (message.type == MessageObject.TYPE_PHOTO) {
+            return 1;
+        }
+        if (message.type == MessageObject.TYPE_VIDEO) {
+            return 2;
+        }
+        final TLRPC.Document document = message.getDocument();
+        if (document == null || document.mime_type == null || message.isRoundVideo() || message.isNewGif() || message.isSticker() || message.isAnimatedSticker()) {
+            return 0;
+        }
+        if (document.mime_type.startsWith("video/")) {
+            return 2;
+        }
+        if (document.mime_type.equals("image/jpeg") || document.mime_type.equals("image/jpg") || document.mime_type.equals("image/png")) {
+            return 1;
+        }
+        return 0;
+    }
+
+    /** IthaGram: abre el editor de historias con la foto o el video de este mensaje ya cargado. */
+    private void ithaPostToStory(MessageObject message) {
+        if (message == null || message.messageOwner == null || getParentActivity() == null) {
+            return;
+        }
+        File file = null;
+        final String attach = message.messageOwner.attachPath;
+        if (!TextUtils.isEmpty(attach)) {
+            final File temp = new File(attach);
+            if (temp.exists()) {
+                file = temp;
+            }
+        }
+        if (file == null) {
+            final File cached = FileLoader.getInstance(currentAccount).getPathToMessage(message.messageOwner);
+            if (cached != null && cached.exists()) {
+                file = cached;
+            }
+        }
+        if (file == null) {
+            BulletinFactory.of(this).createErrorBulletin(org.telegram.messenger.DownloadQueueManager.tr(
+                    "Primero descargá el archivo para subirlo a tu historia.",
+                    "Download the file first to post it to your story."), themeDelegate).show();
+            return;
+        }
+        final int kind = ithaStoryKind(message);
+        if (kind == 0) {
+            return;
+        }
+        final StoryEntry entry = StoryEntry.fromFile(file, kind == 2, (long) (message.getDuration() * 1000));
+        if (entry == null) {
+            BulletinFactory.of(this).createErrorBulletin(LocaleController.getString(R.string.UnsupportedAttachment), themeDelegate).show();
+            return;
+        }
+        StoryRecorder.getInstance(getParentActivity(), currentAccount).openForward(null, entry, 0, true);
+    }
+
     private void saveMessageToGallery(MessageObject messageObject) {
         String path = messageObject.messageOwner.attachPath;
         if (!TextUtils.isEmpty(path)) {
@@ -36720,6 +36783,10 @@ public class ChatActivity extends BaseFragment implements
                 if (!AndroidUtilities.openForView(selectedObject, getParentActivity(), themeDelegate, false)) {
                     alertUserOpenError(selectedObject);
                 }
+                break;
+            }
+            case OPTION_ITHA_POST_STORY: {
+                ithaPostToStory(selectedObject);
                 break;
             }
             case OPTION_SAVE_TO_GALLERY2: {
@@ -50279,6 +50346,18 @@ public class ChatActivity extends BaseFragment implements
             items.add(getString(R.string.WelcomeMessageRevert));
             options.add(OPTION_WELCOME_REVERT);
             icons.add(R.drawable.outline_revert_24);
+        }
+        // IthaGram: "Subir a historia" justo despues de "Guardar en la galeria" (solo fotos y videos)
+        if (selectedObject != null && getMessagesController().storiesEnabled() && ithaStoryKind(selectedObject) != 0) {
+            int galleryIndex = options.indexOf(OPTION_SAVE_TO_GALLERY);
+            if (galleryIndex < 0) {
+                galleryIndex = options.indexOf(OPTION_SAVE_TO_GALLERY2);
+            }
+            if (galleryIndex >= 0) {
+                items.add(galleryIndex + 1, org.telegram.messenger.DownloadQueueManager.tr("Subir a historia", "Post to story"));
+                options.add(galleryIndex + 1, OPTION_ITHA_POST_STORY);
+                icons.add(galleryIndex + 1, R.drawable.msg_stories_add);
+            }
         }
     }
 

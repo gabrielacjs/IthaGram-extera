@@ -13,6 +13,7 @@ import android.graphics.Shader;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.media.MediaExtractor;
+import android.media.MediaMetadataRetriever;
 import android.media.MediaFormat;
 import android.os.Build;
 import android.provider.MediaStore;
@@ -1015,6 +1016,64 @@ public class StoryEntry {
             entry.height = 1920;
             entry.resultWidth = 1080;
             entry.resultHeight = 1920;
+        }
+        entry.setupMatrix();
+        return entry;
+    }
+
+    /** IthaGram: entrada de historia a partir de un archivo (foto o video) que ya esta en el telefono. */
+    @Nullable
+    public static StoryEntry fromFile(File file, boolean video, long durationMs) {
+        if (file == null || !file.exists()) {
+            return null;
+        }
+        final StoryEntry entry = new StoryEntry();
+        entry.file = file;
+        entry.fileDeletable = false;
+        entry.isVideo = video;
+        entry.invert = 0;
+        entry.orientation = 0;
+        if (video) {
+            int w = 0, h = 0, rotation = 0;
+            final MediaMetadataRetriever retriever = new MediaMetadataRetriever();
+            try {
+                retriever.setDataSource(file.getAbsolutePath());
+                w = Utilities.parseInt(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH));
+                h = Utilities.parseInt(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT));
+                rotation = Utilities.parseInt(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION));
+                if (durationMs <= 0) {
+                    durationMs = Utilities.parseLong(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION));
+                }
+                final Bitmap frame = retriever.getFrameAtTime(0);
+                if (frame != null) {
+                    final float k = Math.min(1f, 240f / Math.max(frame.getWidth(), frame.getHeight()));
+                    entry.thumbPathBitmap = k < 1f
+                            ? Bitmap.createScaledBitmap(frame, Math.max(1, Math.round(frame.getWidth() * k)), Math.max(1, Math.round(frame.getHeight() * k)), true)
+                            : frame;
+                }
+            } catch (Throwable ignore) {
+            } finally {
+                try {
+                    retriever.release();
+                } catch (Throwable ignore) {}
+            }
+            if (w <= 0 || h <= 0) {
+                return null;
+            }
+            entry.width = w;
+            entry.height = h;
+            entry.orientation = rotation;
+            entry.duration = Math.max(1, durationMs);
+            entry.left = 0;
+            entry.right = Math.min(1, 59_500f / entry.duration);
+        } else {
+            entry.decodeBounds(file.getAbsolutePath());
+            if (entry.width <= 0 || entry.height <= 0) {
+                return null;
+            }
+            try {
+                entry.orientation = AndroidUtilities.getImageOrientation(file).first;
+            } catch (Throwable ignore) {}
         }
         entry.setupMatrix();
         return entry;
